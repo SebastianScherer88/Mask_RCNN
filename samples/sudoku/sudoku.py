@@ -54,19 +54,19 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 
 
-class BalloonConfig(Config):
+class SudokuConfig(Config):
     """Configuration for training on the toy  dataset.
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "balloon"
+    NAME = "sudoku"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + balloon
+    NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -79,22 +79,57 @@ class BalloonConfig(Config):
 #  Dataset
 ############################################################
 
-class BalloonDataset(utils.Dataset):
+class SudokuDataset(utils.Dataset):
 
     def load_balloon(self, dataset_dir, subset):
         """Load a subset of the Balloon dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
-        # Add classes. We have only one class to add.
-        self.add_class("balloon", 1, "balloon")
+        # Add classes. We have ten classes to add.
+        # The class indexed at 0 is the 'background' class which is part of the Dataset base class
+        self.add_class("1", 1, "sudoku")
+        self.add_class("2", 2, "sudoku")
+        self.add_class("3", 3, "sudoku")
+        self.add_class("4", 4, "sudoku")
+        self.add_class("5", 5, "sudoku")
+        self.add_class("6", 6, "sudoku")
+        self.add_class("7", 7, "sudoku")
+        self.add_class("8", 8, "sudoku")
+        self.add_class("9", 9, "sudoku")
+        self.add_class("blank", 10, "sudoku")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
-        # VGG Image Annotator (up to version 1.6) saves each image in the form:
+        # VGG Image Annotator (from 2 upwards) saves each image in the form:
+        #{"filename": "sudoku-original.jpg",
+        #"size": "53178",
+        #"regions": [{
+        #        "shape_attributes": {
+        #            "name": "polyline",
+        #            "all_points_x": [55, 53, 89, 88, 56],
+        #            "all_points_y": [64, 92, 95, 66, 64]
+        #        },
+        #        "region_attributes": {
+        #            "name": "blank", # or "1", "2", ... "9"; needs to be created by populating the 'name' field in the VGG Image annotator for given segment
+        #            "type": "unknown",
+        #            "image_quality": {
+        #                "good": true,
+        #                "good_illumination": true,
+        #                "frontal": true
+        #            }
+        #        }
+        #    },... more regions ... ],
+        #"file_attributes": {
+        #    "caption": "",
+        #    "public_domain": "no",
+        #    "image_url": ""}
+        #}
+           
+        
         # { 'filename': '28503151_5b5b7ec140_b.jpg',
         #   'regions': {
         #       '0': {
@@ -108,9 +143,10 @@ class BalloonDataset(utils.Dataset):
         #   'size': 100202
         # }
         # We mostly care about the x and y coordinates of each region
-        # Note: In VIA 2.0, regions was changed from a dict to a list.
+        # NOTE: in older versions of VGG Image annotator, the list in the 'regions' key will be a dictionary
+        
         annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-        annotations = list(annotations.values())  # don't need the dict keys
+        annotations = list(annotations.values())  # don't need the dict keys = filenames; they are contained in the annotations
 
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
@@ -121,11 +157,16 @@ class BalloonDataset(utils.Dataset):
             # Get the x, y coordinaets of points of the polygons that make up
             # the outline of each object instance. These are stores in the
             # shape_attributes (see json format above)
+            # We also extract the segmented area's class label - since this isnt the balloon data set,
+            # we need to keep track of class labels so we can later pass them on to our masks and 
+            # the model itself.
             # The if condition is needed to support VIA versions 1.x and 2.x.
             if type(a['regions']) is dict:
                 polygons = [r['shape_attributes'] for r in a['regions'].values()]
+                class_labels = [r['region_attributes']['name'] for r in a['regions'].values()]
             else:
-                polygons = [r['shape_attributes'] for r in a['regions']] 
+                polygons = [r['shape_attributes'] for r in a['regions']]
+                class_labels = [r['region_attributes']['name'] for r in a['regions']]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -135,11 +176,12 @@ class BalloonDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "balloon",
+                "sudoku",
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
-                polygons=polygons)
+                polygons=polygons,
+                class_labels = class_labels)
 
     def load_mask(self, image_id):
         """Generate instance masks for an image.
@@ -162,10 +204,12 @@ class BalloonDataset(utils.Dataset):
             # Get indexes of pixels inside the polygon and set them to 1
             rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
             mask[rr, cc, i] = 1
+            
+        class_labels = image_info['class_labels']
 
         # Return mask, and array of class IDs of each instance. Since we have
         # one class ID only, we return an array of 1s
-        return mask.astype(np.bool), np.ones([mask.shape[-1]], dtype=np.int32)
+        return mask.astype(np.bool), np.array(class_labels).astype(int32)
 
     def image_reference(self, image_id):
         """Return the path of the image."""
