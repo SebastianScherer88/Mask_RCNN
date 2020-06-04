@@ -81,7 +81,7 @@ class SudokuConfig(Config):
 
 class SudokuDataset(utils.Dataset):
 
-    def load_balloon(self, dataset_dir, subset):
+    def load_sudoku(self, dataset_dir, subset):
         """Load a subset of the Balloon dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
