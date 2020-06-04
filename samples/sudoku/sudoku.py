@@ -332,13 +332,13 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='Train Mask R-CNN to detect balloons.')
+        description='Train Mask R-CNN to detect sudoku grids.')
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'splash'")
     parser.add_argument('--dataset', required=False,
-                        metavar="/path/to/balloon/dataset/",
-                        help='Directory of the Balloon dataset')
+                        metavar="/path/to/sudoku/dataset/",
+                        help='Directory of the Sudoku dataset')
     parser.add_argument('--weights', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
@@ -367,9 +367,9 @@ if __name__ == '__main__':
 
     # Configurations
     if args.command == "train":
-        config = BalloonConfig()
+        config = SudokuConfig()
     else:
-        class InferenceConfig(BalloonConfig):
+        class InferenceConfig(SudokuConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
