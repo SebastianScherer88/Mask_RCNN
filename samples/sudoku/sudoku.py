@@ -88,16 +88,16 @@ class SudokuDataset(utils.Dataset):
         """
         # Add classes. We have ten classes to add.
         # The class indexed at 0 is the 'background' class which is part of the Dataset base class
-        self.add_class("1", 1, "sudoku")
-        self.add_class("2", 2, "sudoku")
-        self.add_class("3", 3, "sudoku")
-        self.add_class("4", 4, "sudoku")
-        self.add_class("5", 5, "sudoku")
-        self.add_class("6", 6, "sudoku")
-        self.add_class("7", 7, "sudoku")
-        self.add_class("8", 8, "sudoku")
-        self.add_class("9", 9, "sudoku")
-        self.add_class("blank", 10, "sudoku")
+        self.add_class("sudoku",1,"1")
+        self.add_class("sudoku",2,"2")
+        self.add_class("sudoku",3,"3")
+        self.add_class("sudoku",4,"4")
+        self.add_class("sudoku",5,"5")
+        self.add_class("sudoku",6,"1")
+        self.add_class("sudoku",7,"7")
+        self.add_class("sudoku",8,"8")
+        self.add_class("sudoku",9,"9")
+        self.add_class("sudoku",10,"blank")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
