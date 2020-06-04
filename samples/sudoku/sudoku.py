@@ -35,7 +35,11 @@ import numpy as np
 import skimage.draw
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../../")
+#ROOT_DIR = os.path.abspath("../../")
+ROOT_DIR = os.getcwd()
+
+print(ROOT_DIR)
+input()
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -67,6 +71,9 @@ class SudokuConfig(Config):
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
+    
+    # number of epochs
+    EPOCHS = 20
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -228,16 +235,16 @@ class SudokuDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model):
+def train(model,dataset):
     """Train the model."""
     # Training dataset.
-    dataset_train = BalloonDataset()
-    dataset_train.load_balloon(args.dataset, "train")
+    dataset_train = SudokuDataset()
+    dataset_train.load_sudoku(dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = BalloonDataset()
-    dataset_val.load_balloon(args.dataset, "val")
+    dataset_val = SudokuDataset()
+    dataset_val.load_sudoku(dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -247,7 +254,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=30,
+                epochs=config.EPOCHS,
                 layers='heads')
 
 
@@ -338,6 +345,7 @@ if __name__ == '__main__':
                         help="'train' or 'splash'")
     parser.add_argument('--dataset', required=False,
                         metavar="/path/to/sudoku/dataset/",
+                        default='./datasets/sudoku',
                         help='Directory of the Sudoku dataset')
     parser.add_argument('--weights', required=True,
                         metavar="/path/to/weights.h5",
@@ -353,6 +361,10 @@ if __name__ == '__main__':
                         metavar="path or URL to video",
                         help='Video to apply the color splash effect on')
     args = parser.parse_args()
+    
+    print(os.getcwd())
+    
+    input()
 
     # Validate arguments
     if args.command == "train":
@@ -413,7 +425,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model)
+        train(model,args.dataset)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
                                 video_path=args.video)
