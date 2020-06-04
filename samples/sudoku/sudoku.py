@@ -73,6 +73,18 @@ class SudokuConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
+    
+    # Mapping of class names to class ids
+    CLASS_ID_FROM_LABEL = {'1':1,
+                          '2':2,
+                          '3':3,
+                          '4':4,
+                          '5':5,
+                          '6':6,
+                          '7':7,
+                          '8':8,
+                          '9':9,
+                          'blank':10}
 
 
 ############################################################
@@ -88,16 +100,10 @@ class SudokuDataset(utils.Dataset):
         """
         # Add classes. We have ten classes to add.
         # The class indexed at 0 is the 'background' class which is part of the Dataset base class
-        self.add_class("sudoku",1,"1")
-        self.add_class("sudoku",2,"2")
-        self.add_class("sudoku",3,"3")
-        self.add_class("sudoku",4,"4")
-        self.add_class("sudoku",5,"5")
-        self.add_class("sudoku",6,"1")
-        self.add_class("sudoku",7,"7")
-        self.add_class("sudoku",8,"8")
-        self.add_class("sudoku",9,"9")
-        self.add_class("sudoku",10,"blank")
+        for class_label in SudokuConfig.CLASS_ID_FROM_LABEL:
+            self.add_class("sudoku",
+                            SudokuConfig.CLASS_ID_FROM_LABEL[class_label],
+                            class_label)
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -167,6 +173,8 @@ class SudokuDataset(utils.Dataset):
             else:
                 polygons = [r['shape_attributes'] for r in a['regions']]
                 class_labels = [r['region_attributes']['name'] for r in a['regions']]
+                
+            class_ids = [SudokuConfig.CLASS_ID_FROM_LABEL[class_label] for class_label in class_labels]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -181,7 +189,7 @@ class SudokuDataset(utils.Dataset):
                 path=image_path,
                 width=width, height=height,
                 polygons=polygons,
-                class_labels = class_labels)
+                class_ids = class_ids)
 
     def load_mask(self, image_id):
         """Generate instance masks for an image.
@@ -205,11 +213,11 @@ class SudokuDataset(utils.Dataset):
             rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
             mask[rr, cc, i] = 1
             
-        class_labels = image_info['class_labels']
+        class_ids = image_info['class_ids']
 
         # Return mask, and array of class IDs of each instance. Since we have
         # one class ID only, we return an array of 1s
-        return mask.astype(np.bool), np.array(class_labels).astype(np.int32)
+        return mask.astype(np.bool), np.array(class_ids).astype(np.int32)
 
     def image_reference(self, image_id):
         """Return the path of the image."""
