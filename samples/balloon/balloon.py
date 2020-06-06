@@ -61,10 +61,6 @@ class BalloonConfig(Config):
     # Give the configuration a recognizable name
     NAME = "balloon"
 
-    # We use a GPU with 12GB memory, which can fit two images.
-    # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
-
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + balloon
 
@@ -73,6 +69,10 @@ class BalloonConfig(Config):
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
+    
+    BACKBONE = 'resnet50'
+    
+    EPOCHS = 5
 
 
 ############################################################
@@ -176,16 +176,16 @@ class BalloonDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model):
+def train(model,config,dataset):
     """Train the model."""
     # Training dataset.
     dataset_train = BalloonDataset()
-    dataset_train.load_balloon(args.dataset, "train")
+    dataset_train.load_balloon(dataset, "train")
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = BalloonDataset()
-    dataset_val.load_balloon(args.dataset, "val")
+    dataset_val.load_balloon(dataset, "val")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -195,7 +195,7 @@ def train(model):
     print("Training network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=30,
+                epochs=config.EPOCHS,
                 layers='heads')
 
 
@@ -361,7 +361,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model)
+        train(model,config,args.dataset)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
                                 video_path=args.video)

@@ -67,20 +67,11 @@ class SudokuConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
-    
-    # number of epochs
-    EPOCHS = 20
 
-    # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
-
-    # Skip detections with < 90% confidence
-    DETECTION_MIN_CONFIDENCE = 0.9
-    
     # Mapping of class names to class ids
     CLASS_ID_FROM_LABEL = {'1':1,
                           '2':2,
@@ -92,6 +83,16 @@ class SudokuConfig(Config):
                           '8':8,
                           '9':9,
                           'blank':10}
+                          
+                              # Number of training steps per epoch
+    STEPS_PER_EPOCH = 100
+
+    # Skip detections with < 90% confidence
+    DETECTION_MIN_CONFIDENCE = 0.9
+    
+    BACKBONE = 'resnet50'
+    
+    EPOCHS = 5
 
 
 ############################################################
@@ -235,7 +236,7 @@ class SudokuDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model,dataset):
+def train(model,config,dataset):
     """Train the model."""
     # Training dataset.
     dataset_train = SudokuDataset()
@@ -425,7 +426,7 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model,args.dataset)
+        train(model,config,args.dataset)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,
                                 video_path=args.video)
