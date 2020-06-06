@@ -35,11 +35,7 @@ import numpy as np
 import skimage.draw
 
 # Root directory of the project
-#ROOT_DIR = os.path.abspath("../../")
-ROOT_DIR = os.getcwd()
-
-print(ROOT_DIR)
-input()
+ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -65,13 +61,19 @@ class SudokuConfig(Config):
     # Give the configuration a recognizable name
     NAME = "sudoku"
 
-    # We use a GPU with 12GB memory, which can fit two images.
-    # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 1
-
     # Number of classes (including background)
     NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
 
+    # Number of training steps per epoch
+    STEPS_PER_EPOCH = 100
+
+    # Skip detections with < 90% confidence
+    DETECTION_MIN_CONFIDENCE = 0.9
+    
+    BACKBONE = 'resnet50'
+    
+    EPOCHS = 5
+    
     # Mapping of class names to class ids
     CLASS_ID_FROM_LABEL = {'1':1,
                           '2':2,
@@ -83,17 +85,6 @@ class SudokuConfig(Config):
                           '8':8,
                           '9':9,
                           'blank':10}
-                          
-                              # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
-
-    # Skip detections with < 90% confidence
-    DETECTION_MIN_CONFIDENCE = 0.9
-    
-    BACKBONE = 'resnet50'
-    
-    EPOCHS = 5
-
 
 ############################################################
 #  Dataset
@@ -362,10 +353,6 @@ if __name__ == '__main__':
                         metavar="path or URL to video",
                         help='Video to apply the color splash effect on')
     args = parser.parse_args()
-    
-    print(os.getcwd())
-    
-    input()
 
     # Validate arguments
     if args.command == "train":
