@@ -273,13 +273,30 @@ class Dataset(object):
             "name": class_name,
         })
 
-    def add_image(self, source, image_id, path, **kwargs):
+    def add_image(self, source, image_id, path, polygons, **kwargs):
         image_info = {
             "id": image_id,
             "source": source,
             "path": path,
         }
+
         image_info.update(kwargs)
+	
+	# supports the polyline and rect segmentation modes
+        formatted_polygons = []
+
+        for polygon in polygons:
+            if polygon['name'] == 'polyline':
+                formatted_polygons.append(polygon)
+            elif polygon['name'] == 'rect':
+                x_top_left, y_top_left, width, height = polygon['x'], polygon['y'], polygon['width'], polygon['height']
+
+        	# go anti-clockwise and convert into polygone
+                polygon['all_points_x'], polygon['all_points_y'] = [x_top_left,x_top_left,x_top_left+width,x_top_left+width],[y_top_left,y_top_left+height,y_top_left+height,y_top_left]
+                formatted_polygons.append(polygon)
+
+        image_info['polygons'] = formatted_polygons
+
         self.image_info.append(image_info)
 
     def image_reference(self, image_id):

@@ -65,14 +65,14 @@ class SudokuConfig(Config):
     NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
+    STEPS_PER_EPOCH = 10
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
     
     BACKBONE = 'resnet50'
     
-    EPOCHS = 5
+    EPOCHS = 25
     
     # Mapping of class names to class ids
     CLASS_ID_FROM_LABEL = {'1':1,
@@ -168,10 +168,10 @@ class SudokuDataset(utils.Dataset):
             # The if condition is needed to support VIA versions 1.x and 2.x.
             if type(a['regions']) is dict:
                 polygons = [r['shape_attributes'] for r in a['regions'].values()]
-                class_labels = [r['region_attributes']['name'] for r in a['regions'].values()]
+                class_labels = [r['region_attributes']['grid_cell'] for r in a['regions'].values()]
             else:
                 polygons = [r['shape_attributes'] for r in a['regions']]
-                class_labels = [r['region_attributes']['name'] for r in a['regions']]
+                class_labels = [r['region_attributes']['grid_cell'] for r in a['regions']]
                 
             class_ids = [SudokuConfig.CLASS_ID_FROM_LABEL[class_label] for class_label in class_labels]
 
@@ -221,7 +221,7 @@ class SudokuDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "balloon":
+        if info["source"] == "sudoku":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
