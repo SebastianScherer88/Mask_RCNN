@@ -65,14 +65,14 @@ class SudokuConfig(Config):
     NUM_CLASSES = 1 + 10  # Background + 10 grid cell classes:1,2,3,4,5,6,7,8,9 and blank
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 10
+    STEPS_PER_EPOCH = 100
 
     # Skip detections with < 90% confidence
-    DETECTION_MIN_CONFIDENCE = 0.9
+    DETECTION_MIN_CONFIDENCE = 0.6
     
     BACKBONE = 'resnet50'
     
-    EPOCHS = 25
+    EPOCHS = 100
     
     # Mapping of class names to class ids
     CLASS_ID_FROM_LABEL = {'one':1,
@@ -105,7 +105,7 @@ class SudokuDataset(utils.Dataset):
                             class_label)
 
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        #assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
@@ -151,7 +151,7 @@ class SudokuDataset(utils.Dataset):
         # NOTE: in older versions of VGG Image annotator, the list in the 'regions' key will be a dictionary
         
         annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-        #annotations = list(annotations.values())  # don't need the dict keys = filenames; they are contained in the annotations
+        annotations = list(annotations.values())  # don't need the dict keys = filenames; they are contained in the annotations
 
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
