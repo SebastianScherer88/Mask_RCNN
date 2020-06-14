@@ -75,15 +75,15 @@ class SudokuConfig(Config):
     EPOCHS = 25
     
     # Mapping of class names to class ids
-    CLASS_ID_FROM_LABEL = {'1':1,
-                          '2':2,
-                          '3':3,
-                          '4':4,
-                          '5':5,
-                          '6':6,
-                          '7':7,
-                          '8':8,
-                          '9':9,
+    CLASS_ID_FROM_LABEL = {'one':1,
+                          'two':2,
+                          'three':3,
+                          'four':4,
+                          'five':5,
+                          'six':6,
+                          'seven':7,
+                          'eight':8,
+                          'nine':9,
                           'blank':10}
 
 ############################################################
@@ -151,7 +151,7 @@ class SudokuDataset(utils.Dataset):
         # NOTE: in older versions of VGG Image annotator, the list in the 'regions' key will be a dictionary
         
         annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-        annotations = list(annotations.values())  # don't need the dict keys = filenames; they are contained in the annotations
+        #annotations = list(annotations.values())  # don't need the dict keys = filenames; they are contained in the annotations
 
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
